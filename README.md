@@ -18,12 +18,13 @@ The self-relationships and poor matches (e.g. where the Cosine similarity is les
     OR rel.cosineSimilarity < 0.6
     DELETE rel
 
-The relationship beween the following two images was not deleted because they relative high Cosine similarity scores:
+The relationships beween the first two pairs of images were not deleted because they relatively high Cosine similarity scores:
 
 photoA                                                   |  photoB                                                  | Cosine similarity
 :-------------------------------------------------------:|:--------------------------------------------------------:|:------------:|
 ![](photos/PXL_20201121_223652162.PORTRAIT-01.COVER.jpg) |![](photos/PXL_20201121_223705333.PORTRAIT-01.COVER.jpg)  | 0.82
 ![](photos/PXL_20201124_182915588.jpg)                   |![](photos/PXL_20201124_182911378.MP.jpg)                 | 0.63
+![](photos/IMG_20190901_230251.jpg)                      |![](photos/PXL_20201205_203638399.jpg)                    | 0.04
 
 Once the graph has been built, similar images can be retrieved with a simple Cypher query in a few, short milliseconds, e.g.
 
@@ -31,5 +32,5 @@ Once the graph has been built, similar images can be retrieved with a simple Cyp
 
 ## Caveats
 * Creating relationships between every node doesn't scale. The relationships should only be created if they're needed. It doesn't make sense to create relationships, and then delete them if they have weak Cosine similarity scores.
-* This uses a pre-canned TensorFlow neural net. There are a ~1000 attributes that describe very general things, e.g. `electric guitar`, `refrigerator`, `stethoscope`, `vase`, etc... If you have a domain-specific use-case (e.g. makes/models of vehicles, people/clothing, etc...), it'd make sense to train your own neural network model. At the very least, experiment with other neural nets on [TensorFlow Hub](https://tfhub.dev/).
+* This uses a pre-canned TensorFlow neural net. There are a ~1000 attributes that describe very general things, e.g. `electric guitar`, `refrigerator`, `stethoscope`, `vase`, etc... If you have a domain-specific use-case (e.g. makes/models of vehicles, people/clothing, etc...), it'd make sense to train your own neural network model. At the very least, experiment with other pre-trained neural nets on [TensorFlow Hub](https://tfhub.dev/).
 * Geo/time has not been considered and that could reduce the number of images to evaluate when creating relationships.
