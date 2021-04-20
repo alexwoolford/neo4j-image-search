@@ -8,9 +8,9 @@ from neo4j import GraphDatabase
 
 # get/instantiate classifier model
 IMAGE_SHAPE = (224, 224)
-classifier_model = "https://tfhub.dev/google/tf2-preview/mobilenet_v2/classification/4"
+classifier_model = "https://tfhub.dev/google/tf2-preview/mobilenet_v2/classification/3"
 classifier = tf.keras.Sequential([
-    hub.KerasLayer(classifier_model, input_shape=IMAGE_SHAPE + (3,))
+    hub.KerasLayer(classifier_model, input_shape=IMAGE_SHAPE + (3,), output_shape=[1001])
 ])
 
 # neo4j DB connection
@@ -37,18 +37,16 @@ for path in pathlist:
 
 # calculate the Cosine similarity scores between all the photos in the graph
 with driver.session(database="photosearch") as session:
-    session.run("MATCH (photoA:Photo) "
-                "MATCH (photoB:Photo) "
-                "WITH photoA, collect(photoB) AS photos "
-                "UNWIND photos AS photoB "
-                "WITH photoA, photoB, gds.alpha.similarity.cosine(photoA.classification_list, photoB.classification_list) AS similarity "
-                "MERGE(:Photo {filename: photoA.filename})-[rel:IS_SIMILAR_TO {cosineSimilarity: similarity}]-(:Photo {filename: photoB.filename})")
-
-# delete all the weak and self-relationships
-with driver.session(database="photosearch") as session:
-    session.run("MATCH(m:Photo)-[rel:IS_SIMILAR_TO]-(n:Photo) "
-                "WHERE m.filename = n.filename "
-                "OR rel.cosineSimilarity < 0.6 "
-                "DELETE rel")
+    session.run("MATCH (p:Photo) "
+                "WITH {item:id(p), weights: p.classification_list} AS itemData "
+                "WITH collect(itemData) AS data "
+                "CALL gds.alpha.similarity.cosine.write({ "
+                "  data: data, "
+                "  skipValue: null, "
+                "  similarityCutoff:0.6, "
+                "  writeRelationshipType:'IS_SIMILAR_TO' "
+                "}) "
+                "YIELD nodes, similarityPairs, min, max, mean, stdDev "
+                "RETURN nodes, similarityPairs, min, max, mean, stdDev")
 
 driver.close()
